@@ -327,7 +327,6 @@ def solve_puzzle(game):
     # queue will hold positions needed to be explored as well the path 
     # that got us to the position being added to queue
     queue = []
-
     # Mark the player's current position as visited
     # and also add it to queue
     queue.append([game, []])
