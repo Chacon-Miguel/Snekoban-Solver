@@ -26,16 +26,14 @@ class Pair:
         self.val = val
 
 class Node:
-    def __init__(self, val, game, prev_step):
+    def __init__(self, val, h, game, prev_step):
         self.val = val
+        self.h = h
         self.game = game
         self.prev_step = prev_step
 
     def get_val(self):
         return self.val
-
-    def set_val(self, val):
-        self.val = val
 
     def get_game(self):
         return self.game
@@ -70,100 +68,82 @@ class Node:
     def __ge__(self, other):
         return self.get_val() >= other.get_val()
 
+
 class MinHeap:
-  
-    def __init__(self, maxsize):
-        self.maxsize = maxsize
-        self.size = 0
-        self.Heap = [Node(0, None, None)]*(self.maxsize + 1)
-        self.Heap[0] = Node(-1 * sys.maxsize, None, None)
-        self.FRONT = 1
-  
-    # Function to return the position of
-    # parent for the node currently
-    # at pos
-    def parent(self, pos):
-        return pos//2
-  
-    # Function to return the position of
-    # the left child for the node currently
-    # at pos
-    def leftChild(self, pos):
-        return 2 * pos
-  
-    # Function to return the position of
-    # the right child for the node currently
-    # at pos
-    def rightChild(self, pos):
-        return (2 * pos) + 1
-  
-    # Function that returns true if the passed
-    # node is a leaf node
-    def isLeaf(self, pos):
-        return pos*2 > self.size
-  
-    # Function to swap two nodes of the heap
-    def swap(self, fpos, spos):
-        self.Heap[fpos], self.Heap[spos] = self.Heap[spos], self.Heap[fpos]
-  
-    # Function to heapify the node at pos
-    def minHeapify(self, pos):
-  
-        # If the node is a non-leaf node and greater
-        # than any of its child
-        if not self.isLeaf(pos):
-            if (self.Heap[pos] > self.Heap[self.leftChild(pos)] or 
-               self.Heap[pos] > self.Heap[self.rightChild(pos)]):
-  
-                # Swap with the left child and heapify
-                # the left child
-                if self.Heap[self.leftChild(pos)] < self.Heap[self.rightChild(pos)]:
-                    self.swap(pos, self.leftChild(pos))
-                    self.minHeapify(self.leftChild(pos))
-  
-                # Swap with the right child and heapify
-                # the right child
-                else:
-                    self.swap(pos, self.rightChild(pos))
-                    self.minHeapify(self.rightChild(pos))
-  
-    # Function to insert a node into the heap
-    def insert(self, element):
-        if self.size >= self.maxsize :
-            print('MIN HEAP TOO SMALL')
-            return 
-        self.size += 1
-        self.Heap[self.size] = element
-  
-        current = self.size
-  
-        while self.Heap[current] < self.Heap[self.parent(current)]:
-            self.swap(current, self.parent(current))
-            current = self.parent(current)
-  
-    # Function to print the contents of the heap
-    def Print(self):
-        for i in range(1, (self.size//2)+1):
-            print(" PARENT : "+ str(self.Heap[i])+" LEFT CHILD : "+ 
-                                str(self.Heap[2 * i])+" RIGHT CHILD : "+
-                                str(self.Heap[2 * i + 1]))
-  
-    # Function to build the min heap using
-    # the minHeapify function
-    def minHeap(self):
-  
-        for pos in range(self.size//2, 0, -1):
-            self.minHeapify(pos)
-  
-    # Function to remove and return the minimum
-    # element from the heap
-    def remove(self):
-  
-        popped = self.Heap[self.FRONT]
-        self.Heap[self.FRONT] = self.Heap[self.size]
-        self.size -= 1
-        self.minHeapify(self.FRONT)
-        return popped
+    def __init__(self):
+        """
+        On this implementation the heap list is initialized with a value
+        """
+        self.heap_list = [0]
+        self.current_size = 0
+ 
+    def sift_up(self, i):
+        """
+        Moves the value up in the tree to maintain the heap property.
+        """
+        # While the element is not the root or the left element
+        while i // 2 > 0:
+            # If the element is less than its parent swap the elements
+            if self.heap_list[i] < self.heap_list[i // 2]:
+                self.heap_list[i], self.heap_list[i // 2] = self.heap_list[i // 2], self.heap_list[i]
+            # Move the index to the parent to keep the properties
+            i = i // 2
+ 
+    def insert(self, k):
+        """
+        Inserts a value into the heap
+        """
+        # Append the element to the heap
+        self.heap_list.append(k)
+        # Increase the size of the heap.
+        self.current_size += 1
+        # Move the element to its position from bottom to the top
+        self.sift_up(self.current_size)
+ 
+    def sift_down(self, i):
+        # if the current node has at least one child
+        while (i * 2) <= self.current_size:
+            # Get the index of the min child of the current node
+            mc = self.min_child(i)
+            # Swap the values of the current element is greater than its min child
+            if self.heap_list[i] > self.heap_list[mc]:
+                self.heap_list[i], self.heap_list[mc] = self.heap_list[mc], self.heap_list[i]
+            i = mc
+ 
+    def min_child(self, i):
+        # If the current node has only one child, return the index of the unique child
+        if (i * 2)+1 > self.current_size:
+            return i * 2
+        else:
+            # Herein the current node has two children
+            # Return the index of the min child according to their values
+            if self.heap_list[i*2] < self.heap_list[(i*2)+1]:
+                return i * 2
+            else:
+                return (i * 2) + 1
+ 
+    def delete_min(self):
+        # Equal to 1 since the heap list was initialized with a value
+        if len(self.heap_list) == 1:
+            return 'Empty heap'
+ 
+        # Get root of the heap (The min value of the heap)
+        root = self.heap_list[1]
+ 
+        # Move the last value of the heap to the root
+        self.heap_list[1] = self.heap_list[self.current_size]
+ 
+        # Pop the last value since a copy was set on the root
+        *self.heap_list, _ = self.heap_list
+ 
+        # Decrease the size of the heap
+        self.current_size -= 1
+ 
+        # Move down the root (value at index 1) to keep the heap property
+        self.sift_down(1)
+ 
+        # Return the min value of the heap
+        return root
 
 def new_game(level_description):
     """
@@ -450,7 +430,13 @@ def get_min_distances(computers, goals):
         total_min_distance += min_distance
     
     return total_min_distance
-
+    computers_copy = list(computers)
+    result = 0
+    for g in goals:
+        c, d = min([(c, get_manhattan(c, g)) for c in computers_copy], key=lambda t: t[1])
+        result += d
+        computers_copy.remove(c)
+    return result
 
 def get_manhattan(pos_1, pos_2):
     return abs(pos_1[1] - pos_2[1]) + abs(pos_1[0] - pos_2[0])
@@ -476,23 +462,26 @@ def solve_puzzle(game):
     deadspots = set(get_deadspots(game))
 
     spos = game['player']
-
     # keep track of seen states of the game
-    visited = set()
+    visited = {}
     # queue will hold estimated cost and associated game states
-    queue = MinHeap(10000)
+    queue = MinHeap()
     # store steps as linked lists
     # initially no steps taken so step is None
     # ppair = Pair(None, None)
     # Mark the player's current position as visited
     # and also add it to queue
-    queue.insert(Node(0 + get_min_distances(game['computer'], game['target']), game, Pair(None, None)))
-    visited.add( ( frozenset(game['computer']), frozenset([game['player']]) ) )
+    d = get_min_distances(game['computer'], game['target'])
+    queue.insert(Node(d, 0, game, Pair(None, None)))
 
-    while queue.size != 0:
+    state = ( frozenset(game['computer']), frozenset([game['player']]) )
+    # state = frozenset(game['computer'])
+    visited[state] = 0
+
+    while queue.current_size != 0:
         # get game with lowest estimated cost
         # min_node is Node(val, game)
-        min_node = queue.remove()
+        min_node = queue.delete_min()
         # get all adjacent position of the dequeued position curr_path
         # If the adjacent position hasn't been visited, then mark it
         # and then enqueue it
@@ -500,7 +489,12 @@ def solve_puzzle(game):
         # if game has been solved, return the path used to get to victory
         if victory_check(min_node.get_game()):
             # REMEMBER THAT U NEED TO RECONSTRUCT THE STEPS TAKEN
-            break
+            path = []
+            cpair = min_node.get_prev_step() # CONSIDER CHANGING NAME OF METHOD
+            while cpair.get_prev() != None:
+                path.insert(0, cpair.get_val())
+                cpair = cpair.get_prev()
+            return path
         # add all 4 cardinal directions
         # for every cardinal direction...
         for direction, coords in d_v.items():
@@ -512,81 +506,62 @@ def solve_puzzle(game):
                         break
             else:
                 # get min distance between computers and targets
+                # state = frozenset(new_game['computer'])
                 state = ( frozenset(new_game['computer']), frozenset( [new_game['player']] ) )
+                new_cost = min_node.h + 1
                 # if haven't visited yet, enqueue the game state
-                if state not in visited:
-                    f = 1 + min_node.get_val() 
+                if state not in visited:# or new_cost < visited[state]:
+                    visited[state] = new_cost
                     g = get_min_distances(new_game['computer'], new_game['target'])
-                    # distance = min_node.get_val()+1+get_min_distances(new_game['computer'], new_game['target'])
-                    node = Node(f, new_game, cpair)
-                    visited.add(state)
+
+                    node = Node(new_cost+g, new_cost, new_game, cpair)
                     queue.insert(node)
     else:
         print(None)
         return None
-    queue.Print()
 
-    path = []
-    cpair = min_node.get_prev_step() # CONSIDER CHANGING NAME OF METHOD
-    while cpair.get_prev() != None:
-        path.insert(0, cpair.get_val())
-        cpair = cpair.get_prev()
-    if path != []:
-        print(path, len(path))
-        return path
-    elif victory_check(min_node.get_game()):
-        print([], 0)
-        return []
-    return None
-
-
-    # CHECK LENGTH OF QUEUEEEEEEEEEE
-
-
-    # # get deadspots
-    # deadspots = set(get_deadspots(game))
-
-    # # use BFS to find shortest path
-    # visited = set()
-    # queue = []
-    # # Mark the player's current position as visited
-    # # and also add it to queue
-    # queue.append([game, []])
-    # visited.add((frozenset(game['computer']), frozenset([game['player']])))
-    # while len(queue) != 0:
-    #     curr_game = queue.pop(0)
-    #     # get all adjacent pixel of the dequeued pixel curr_path
-    #     # If the adjacent pixel hasn't been visited, then mark it
-    #     # and then enqueue it
-    #     if victory_check(curr_game[0]):
-    #         print(curr_game[1], len(curr_game[1]))
-    #         return curr_game[1]
-    #     # add all 4 cardinal directions
-    #     for direction, coords in d_v.items():
-    #         next_node = step_game(curr_game[0], direction)
-    #         # check if any computer is in dead spot
-    #         for pos in next_node['computer']:
-    #             if pos in deadspots:
-    #                 break
-    #         else:
-    #             state = (frozenset(next_node['computer']), frozenset([next_node['player']]))
-    #             if state not in visited:
-    #                 queue.append([next_node, curr_game[1] + [direction]])
-    #                 visited.add(state)
-    # print(None, 0)
-    # return None
 
 if __name__ == "__main__":
     level = [
-    [[], ["wall"], ["wall"], ["wall"], ["wall"], ["wall"]],
-    [[], ["wall"], [], [], [], ["wall"]],
-    [["wall"], ["wall"], ["target"], ["wall"], [], ["wall"]],
-    [["wall"], [], [], ["player"], [], ["wall"]],
-    [["wall"], [], [], ["computer"], [], ["wall"]],
-    [["wall"], [], ["wall"], ["target", "computer"], ["wall"], ["wall"]],
-    [["wall"], [], [], [], ["wall"], []],
-    [["wall"], ["wall"], ["wall"], ["wall"], ["wall"], []]
-    ]
+  [
+    ["wall"],
+    ["wall"],
+    ["wall"],
+    ["wall"],
+    ["wall"],
+    ["wall"],
+    ["wall"],
+    ["wall"]
+  ],
+  [["wall"], [], [], [], [], [], [], ["wall"]],
+  [["wall"], [], ["wall"], ["target"], ["wall"], [], [], ["wall"]],
+  [["wall"], [], [], ["target", "computer"], [], [], [], ["wall"]],
+  [
+    ["wall"],
+    ["wall"],
+    ["computer"],
+    ["target", "computer"],
+    ["computer"],
+    [],
+    ["wall"],
+    ["wall"]
+  ],
+  [
+    ["wall"],
+    [],
+    [],
+    ["target", "computer"],
+    ["player"],
+    ["wall"],
+    ["wall"],
+    []
+  ],
+  [["wall"], [], ["wall"], ["target"], ["wall"], ["wall"], [], []],
+  [["wall"], [], [], [], ["wall"], [], [], []],
+  [["wall"], ["wall"], ["wall"], ["wall"], ["wall"], [], [], []]
+]
+
+
     game = new_game(level)
     # print(solve_puzzle(game))
 
