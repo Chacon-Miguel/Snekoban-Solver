@@ -26,47 +26,47 @@ class Pair:
         self.val = val
 
 class Node:
-    def __init__(self, val, h, game, prev_step):
-        self.val = val
+    def __init__(self, h, g, game, step):
         self.h = h
+        self.g = g
         self.game = game
-        self.prev_step = prev_step
+        self.step = step
 
-    def get_val(self):
-        return self.val
+    def get_h(self):
+        return self.h
+    
+    def get_g(self):
+        return self.g
+
+    def get_f(self):
+        return self.h + self.g
 
     def get_game(self):
         return self.game
 
-    def set_game(self, game):
-        self.game = game
+    def get_step(self):
+        return self.step
 
-    def get_prev_step(self):
-        return self.prev_step
-
-    def set_prev_step(self, step):
-        self.prev_step = step
-    
     def __str__(self):
-        return str(self.get_val())
+        return str(self.get_f())
     # rich comparison dunder methods
     def __lt__(self, other):
-        return self.get_val() < other.get_val()
+        return self.get_f() < other.get_f()
 
     def __le__(self, other):
-        return self.get_val() <= other.get_val()
+        return self.get_f() <= other.get_f()
 
     def __eq__(self, other):
-        return self.get_val() == other.get_val()
+        return self.get_f() == other.get_f()
 
     def __ne__(self, other):
-        return self.get_val() != other.get_val()
+        return self.get_f() != other.get_f()
 
     def __gt__(self, other):
-        return self.get_val() > other.get_val()
+        return self.get_f() > other.get_f()
 
     def __ge__(self, other):
-        return self.get_val() >= other.get_val()
+        return self.get_f() >= other.get_f()
 
 
 class MinHeap:
@@ -472,10 +472,10 @@ def solve_puzzle(game):
     # Mark the player's current position as visited
     # and also add it to queue
     d = get_min_distances(game['computer'], game['target'])
-    queue.insert(Node(d, 0, game, Pair(None, None)))
+    queue.insert(Node(0, d, game, Pair(None, None)))
 
-    state = ( frozenset(game['computer']), frozenset([game['player']]) )
-    # state = frozenset(game['computer'])
+    # state = ( frozenset(game['computer']), frozenset([game['player']]) )
+    state = (frozenset(game['computer']), game['player'])
     visited[state] = 0
 
     while queue.current_size != 0:
@@ -488,37 +488,31 @@ def solve_puzzle(game):
 
         # if game has been solved, return the path used to get to victory
         if victory_check(min_node.get_game()):
-            # REMEMBER THAT U NEED TO RECONSTRUCT THE STEPS TAKEN
             path = []
-            cpair = min_node.get_prev_step() # CONSIDER CHANGING NAME OF METHOD
+            cpair = min_node.get_step()
             while cpair.get_prev() != None:
                 path.insert(0, cpair.get_val())
                 cpair = cpair.get_prev()
             return path
-        # add all 4 cardinal directions
         # for every cardinal direction...
         for direction, coords in d_v.items():
             new_game = step_game(min_node.get_game(), direction)
-            cpair = Pair(min_node.get_prev_step(), direction)
+            cpair = Pair(min_node.get_step(), direction)
             # check if any computer is in deadspot
             for pos in new_game['computer']:
                 if pos in deadspots:
                         break
             else:
                 # get min distance between computers and targets
-                # state = frozenset(new_game['computer'])
-                state = ( frozenset(new_game['computer']), frozenset( [new_game['player']] ) )
-                new_cost = min_node.h + 1
+                # state = ( frozenset(new_game['computer']), frozenset( [new_game['player']] ) )
+                state = (frozenset(new_game['computer']), new_game['player'])
+                new_cost = min_node.get_h() + 1
                 # if haven't visited yet, enqueue the game state
-                if state not in visited:# or new_cost < visited[state]:
+                if state not in visited or new_cost < visited[state]:
                     visited[state] = new_cost
                     g = get_min_distances(new_game['computer'], new_game['target'])
-
-                    node = Node(new_cost+g, new_cost, new_game, cpair)
-                    queue.insert(node)
-    else:
-        print(None)
-        return None
+                    queue.insert(Node(new_cost, g, new_game, cpair))
+    return None
 
 
 if __name__ == "__main__":
